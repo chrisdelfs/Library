@@ -46,8 +46,10 @@ public class BookHelperTest {
         //arrange
         BookHelper sut_ = new BookHelper();
         //excecute
-        IBook acutal = sut_.makeBook("auth", "title", "A1", 1);
-        //
+        IBook actual = sut_.makeBook("auth", "title", "A1", 1);
+        //assert
+        assertNotNull(actual);
+        
     }
     
 }

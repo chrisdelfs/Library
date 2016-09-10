@@ -32,7 +32,11 @@ public class BookMapDAOTest {
     
     @Before
     public void setUp() {
-        helper = new BookHelperStub();
+        IBook book = mock(IBook.class);
+        when(book.getAuthor()).thenReturn("Joe Doe");
+        when(book.getTitle()).thenReturn("Cats life");
+        helper = mock(IBookHelper.class);
+        when(helper.makeBook(anyString(), anyString(), anyString(), anyInt())).thenReturn(book);
         bookDAO = new BookMapDAO(helper);
     }
     
@@ -103,6 +107,7 @@ public class BookMapDAOTest {
         IBook expected = instance.addBook("Joe Doe", "Cats life", "BA1");
         list = instance.findBooksByAuthor(author);
         //assert
+        fail("should of thrown illegal argument exception");
 
     }
 
@@ -137,15 +142,15 @@ public class BookMapDAOTest {
     @Test
     public void testFindBooksByAuthorTitle() {
         //arrange
-        BookStub book1 = mock(BookStub.class);
+        IBook book1 = mock(IBook.class);
         when(book1.getAuthor()).thenReturn("John Doe");
         when(book1.getTitle()).thenReturn("Pet Cemetery");
         
-        BookStub book2 = mock(BookStub.class);
+        IBook book2 = mock(IBook.class);
         when(book2.getAuthor()).thenReturn("John Doe");
         when(book2.getTitle()).thenReturn("Doggos dream");
         
-        BookHelperStub helper = mock(BookHelperStub.class);
+        IBookHelper helper = mock(IBookHelper.class);
         when(helper.makeBook("John Doe", "Pet Cemetery", "A1", 1)).thenReturn(book1);
         when(helper.makeBook("John Doe", "Doggos dream", "A2", 2)).thenReturn(book2);
         

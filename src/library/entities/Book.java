@@ -128,6 +128,11 @@ public class Book implements IBook {
 	public int getID() {
 		return id;
 	}
+        
+        
+	public void setState(EBookState bangers) {
+		state = bangers;
+	}
 
 	
 	@Override

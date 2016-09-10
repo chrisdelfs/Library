@@ -13,13 +13,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 /**
  *
  * @author Chris
  */
 public class BookTest {
-    
+    Book sut_;
     public BookTest() {
     }
     
@@ -33,6 +34,7 @@ public class BookTest {
     
     @Before
     public void setUp() {
+        sut_ = new Book("author", "title", "A1", 1);
     }
     
     @After
@@ -44,145 +46,107 @@ public class BookTest {
      */
     @Test
     public void testBorrow() {
-        System.out.println("borrow");
-        ILoan loan = null;
-        Book instance = null;
-        instance.borrow(loan);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        //arrange
+        ILoan loan = mock(ILoan.class);
+        //excecute
+        sut_.borrow(loan);
+        //assert
+        assertNotNull(sut_.getLoan());
+        assertEquals(EBookState.ON_LOAN, sut_.getState());
     }
-
-    /**
-     * Test of getLoan method, of class Book.
-     */
+    
+    @Test(expected=RuntimeException.class)
+    public void testBorrow_In_Incorrect_State() {
+        //arrange
+        ILoan loan = mock(ILoan.class);
+        sut_.setState(EBookState.DAMAGED);
+        //execute
+        sut_.borrow(loan);
+        fail("should of thrown runtime exception");
+    }
     @Test
-    public void testGetLoan() {
-        System.out.println("getLoan");
-        Book instance = null;
-        ILoan expResult = null;
-        ILoan result = instance.getLoan();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testReturnBook_Damaged() {
+        //arrange
+        sut_.setState(EBookState.ON_LOAN);
+        //excecute
+        sut_.returnBook(true);
+        //assert
+        assertEquals(EBookState.DAMAGED, sut_.getState());
+        assertNull(sut_.getLoan());
     }
-
-    /**
-     * Test of returnBook method, of class Book.
-     */
     @Test
-    public void testReturnBook() {
-        System.out.println("returnBook");
-        boolean damaged = false;
-        Book instance = null;
-        instance.returnBook(damaged);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testReturnBook_Not_Damaged() {
+        //arrange
+        sut_.setState(EBookState.ON_LOAN);
+        //excecute
+        sut_.returnBook(false);
+        //assert
+        assertEquals(EBookState.AVAILABLE, sut_.getState());
+        assertNull(sut_.getLoan());
     }
-
-    /**
-     * Test of lose method, of class Book.
-     */
+    @Test(expected=RuntimeException.class)
+    public void testReturnBook_In_Available() {
+        //arrange
+        sut_.setState(EBookState.AVAILABLE);
+        //excecute
+        sut_.returnBook(false);
+        //assert
+        fail("Book was returned in available state");
+    }
     @Test
-    public void testLose() {
-        System.out.println("lose");
-        Book instance = null;
-        instance.lose();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testLose_When_State_OnLoan() {
+        //arrange
+        sut_.setState(EBookState.ON_LOAN);
+        //excecute
+        sut_.lose();
+        //assert
+        assertEquals(EBookState.LOST, sut_.getState());
     }
-
-    /**
-     * Test of repair method, of class Book.
-     */
+    @Test(expected=RuntimeException.class)
+    public void testLose_When_State_Not_OnLoan() {
+        //arrange
+        sut_.setState(EBookState.AVAILABLE);
+        //excecute
+        sut_.lose();
+        //assert
+        fail("Was lost when available");
+    }
     @Test
-    public void testRepair() {
-        System.out.println("repair");
-        Book instance = null;
-        instance.repair();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testRepair_When_State_Damaged() {
+        //arrange
+        sut_.setState(EBookState.DAMAGED);
+        //excecute
+        sut_.repair();
+        //assert
+        assertEquals(EBookState.AVAILABLE, sut_.getState());
     }
-
-    /**
-     * Test of dispose method, of class Book.
-     */
+    @Test(expected=RuntimeException.class)
+    public void testRepair_When_State_Not_Damaged() {
+        //arrange
+        sut_.setState(EBookState.AVAILABLE);
+        //excecute
+        sut_.lose();
+        //assert
+        fail("Was repaired when available");
+    } 
     @Test
-    public void testDispose() {
-        System.out.println("dispose");
-        Book instance = null;
-        instance.dispose();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testDispose_When_State_Damaged() {
+        //arrange
+        sut_.setState(EBookState.DAMAGED);
+        //excecute
+        sut_.dispose();
+        //assert
+        assertEquals(EBookState.DISPOSED, sut_.getState());
     }
-
-    /**
-     * Test of getState method, of class Book.
-     */
-    @Test
-    public void testGetState() {
-        System.out.println("getState");
-        Book instance = null;
-        EBookState expResult = null;
-        EBookState result = instance.getState();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of getAuthor method, of class Book.
-     */
-    @Test
-    public void testGetAuthor() {
-        System.out.println("getAuthor");
-        Book instance = null;
-        String expResult = "";
-        String result = instance.getAuthor();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of getTitle method, of class Book.
-     */
-    @Test
-    public void testGetTitle() {
-        System.out.println("getTitle");
-        Book instance = null;
-        String expResult = "";
-        String result = instance.getTitle();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of getCallNumber method, of class Book.
-     */
-    @Test
-    public void testGetCallNumber() {
-        System.out.println("getCallNumber");
-        Book instance = null;
-        String expResult = "";
-        String result = instance.getCallNumber();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of getID method, of class Book.
-     */
-    @Test
-    public void testGetID() {
-        System.out.println("getID");
-        Book instance = null;
-        int expResult = 0;
-        int result = instance.getID();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
+    @Test(expected=RuntimeException.class)
+    public void testDispose_When_OnLoan() {
+        //arrange
+        sut_.setState(EBookState.ON_LOAN);
+        //excecute
+        sut_.dispose();
+        //assert
+        fail("Was repaired when available");
+    } 
+    
+    
 }
