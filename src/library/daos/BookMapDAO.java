@@ -103,5 +103,14 @@ public class BookMapDAO implements IBookDAO {
 	private int getNextId() {
 		return nextId++;
 	}
+        public IBookHelper getBookHelper() {
+		return helper;
+	}
+        public Map getBookMap() {
+		return bookMap;
+	}
+        public void setBookMap(int id, IBook book) {
+		bookMap.put(id, book);
+	}
 
 }

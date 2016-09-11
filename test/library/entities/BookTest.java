@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package library.entities;
 
 import library.interfaces.entities.EBookState;
@@ -15,35 +10,49 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
-/**
- *
- * @author Chris
- */
 public class BookTest {
+
     Book sut_;
+
     public BookTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
         sut_ = new Book("author", "title", "A1", 1);
     }
-    
+
     @After
     public void tearDown() {
     }
-
-    /**
-     * Test of borrow method, of class Book.
-     */
+    @Test
+    public void testConstuctor() {
+        //arrange
+        Book test = new Book("Joe Doe", "Joes Life", "A1", 1);
+        //execute
+        //assert
+        assertEquals("Joe Doe", test.getAuthor());
+        assertEquals("Joes Life", test.getTitle());
+        assertEquals("A1", test.getCallNumber());
+        assertEquals(1, test.getID());
+        assertEquals(null, test.getLoan());
+        assertEquals(EBookState.AVAILABLE, test.getState());
+    }
+    @Test(expected = IllegalArgumentException.class)
+    public void testContructor_Bad_Parameters() {
+        //arrange
+        //execute
+        Book test = new Book("", "heh", "ee", -1);
+        fail("should not have created book");
+    }
     @Test
     public void testBorrow() {
         //arrange
@@ -54,8 +63,8 @@ public class BookTest {
         assertNotNull(sut_.getLoan());
         assertEquals(EBookState.ON_LOAN, sut_.getState());
     }
-    
-    @Test(expected=RuntimeException.class)
+
+    @Test(expected = RuntimeException.class)
     public void testBorrow_In_Incorrect_State() {
         //arrange
         ILoan loan = mock(ILoan.class);
@@ -64,6 +73,7 @@ public class BookTest {
         sut_.borrow(loan);
         fail("should of thrown runtime exception");
     }
+
     @Test
     public void testReturnBook_Damaged() {
         //arrange
@@ -74,6 +84,7 @@ public class BookTest {
         assertEquals(EBookState.DAMAGED, sut_.getState());
         assertNull(sut_.getLoan());
     }
+
     @Test
     public void testReturnBook_Not_Damaged() {
         //arrange
@@ -84,7 +95,8 @@ public class BookTest {
         assertEquals(EBookState.AVAILABLE, sut_.getState());
         assertNull(sut_.getLoan());
     }
-    @Test(expected=RuntimeException.class)
+
+    @Test(expected = RuntimeException.class)
     public void testReturnBook_In_Available() {
         //arrange
         sut_.setState(EBookState.AVAILABLE);
@@ -93,6 +105,7 @@ public class BookTest {
         //assert
         fail("Book was returned in available state");
     }
+
     @Test
     public void testLose_When_State_OnLoan() {
         //arrange
@@ -102,7 +115,8 @@ public class BookTest {
         //assert
         assertEquals(EBookState.LOST, sut_.getState());
     }
-    @Test(expected=RuntimeException.class)
+
+    @Test(expected = RuntimeException.class)
     public void testLose_When_State_Not_OnLoan() {
         //arrange
         sut_.setState(EBookState.AVAILABLE);
@@ -111,6 +125,7 @@ public class BookTest {
         //assert
         fail("Was lost when available");
     }
+
     @Test
     public void testRepair_When_State_Damaged() {
         //arrange
@@ -120,7 +135,8 @@ public class BookTest {
         //assert
         assertEquals(EBookState.AVAILABLE, sut_.getState());
     }
-    @Test(expected=RuntimeException.class)
+
+    @Test(expected = RuntimeException.class)
     public void testRepair_When_State_Not_Damaged() {
         //arrange
         sut_.setState(EBookState.AVAILABLE);
@@ -128,7 +144,8 @@ public class BookTest {
         sut_.lose();
         //assert
         fail("Was repaired when available");
-    } 
+    }
+
     @Test
     public void testDispose_When_State_Damaged() {
         //arrange
@@ -138,7 +155,8 @@ public class BookTest {
         //assert
         assertEquals(EBookState.DISPOSED, sut_.getState());
     }
-    @Test(expected=RuntimeException.class)
+
+    @Test(expected = RuntimeException.class)
     public void testDispose_When_OnLoan() {
         //arrange
         sut_.setState(EBookState.ON_LOAN);
@@ -146,7 +164,6 @@ public class BookTest {
         sut_.dispose();
         //assert
         fail("Was repaired when available");
-    } 
-    
-    
+    }
+
 }

@@ -1,6 +1,10 @@
-package library.daos;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package lowlevelintegration;
 
-import library.interfaces.entities.IBook;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -8,36 +12,33 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-public class BookHelperTest {
-
-    public BookHelperTest() {
+/**
+ *
+ * @author Chris
+ */
+public class LowLevelIntegrationHelperBookDAOBook {
+    
+    public LowLevelIntegrationHelperBookDAOBook() {
     }
-
+    
     @BeforeClass
     public static void setUpClass() {
     }
-
+    
     @AfterClass
     public static void tearDownClass() {
     }
-
+    
     @Before
     public void setUp() {
     }
-
+    
     @After
     public void tearDown() {
     }
 
     @Test
-    public void testMakeBook() {
-        //arrange
-        BookHelper sut_ = new BookHelper();
-        //excecute
-        IBook actual = sut_.makeBook("auth", "title", "A1", 1);
-        //assert
-        assertNotNull(actual);
-
+    public void hello() {
+        
     }
-
 }
