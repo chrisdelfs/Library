@@ -22,82 +22,201 @@ import library.interfaces.hardware.IPrinter;
 import library.interfaces.hardware.IScanner;
 import library.interfaces.hardware.IScannerListener;
 
-public class BorrowUC_CTL implements ICardReaderListener, 
-									 IScannerListener, 
-									 IBorrowUIListener {
-	
-	private ICardReader reader;
-	private IScanner scanner; 
-	private IPrinter printer; 
-	private IDisplay display;
-	//private String state;
-	private int scanCount = 0;
-	private IBorrowUI ui;
-	private EBorrowState state; 
-	private IBookDAO bookDAO;
-	private IMemberDAO memberDAO;
-	private ILoanDAO loanDAO;
-	
-	private List<IBook> bookList;
-	private List<ILoan> loanList;
-	private IMember borrower;
-	
-	private JPanel previous;
+public class BorrowUC_CTL implements ICardReaderListener,
+        IScannerListener,
+        IBorrowUIListener {
 
+    private ICardReader reader;
+    private IScanner scanner;
+    private IPrinter printer;
+    private IDisplay display;
+    //private String state;
+    private int scanCount = 0;
+    private IBorrowUI ui;
+    private EBorrowState state;
+    private IBookDAO bookDAO;
+    private IMemberDAO memberDAO;
+    private ILoanDAO loanDAO;
 
-	public BorrowUC_CTL(ICardReader reader, IScanner scanner, 
-			IPrinter printer, IDisplay display,
-			IBookDAO bookDAO, ILoanDAO loanDAO, IMemberDAO memberDAO ) {
+    private List<IBook> bookList;
+    private List<ILoan> loanList;
+    private IMember borrower;
 
-		this.display = display;
-		this.ui = new BorrowUC_UI(this);
-		state = EBorrowState.CREATED;
-	}
-	
-	public void initialise() {
-		previous = display.getDisplay();
-		display.setDisplay((JPanel) ui, "Borrow UI");		
-	}
-	
-	public void close() {
-		display.setDisplay(previous, "Main Menu");
-	}
+    private JPanel previous;
 
-	@Override
-	public void cardSwiped(int memberID) {
-		throw new RuntimeException("Not implemented yet");
-	}
-	
-	
-	
-	@Override
-	public void bookScanned(int barcode) {
-		throw new RuntimeException("Not implemented yet");
-	}
+    public BorrowUC_CTL(ICardReader reader, IScanner scanner,
+            IPrinter printer, IDisplay display,
+            IBookDAO bookDAO, ILoanDAO loanDAO, IMemberDAO memberDAO) {
+
+        this.display = display;
+        this.ui = new BorrowUC_UI(this);
+        state = EBorrowState.CREATED;
+        scanner.addListener(this);
+        reader.addListener(this);
+    }
+
+    public void initialise() {
+        previous = display.getDisplay();
+        display.setDisplay((JPanel) ui, "Borrow UI");
+        setState(EBorrowState.INITIALIZED);
+    }
+
+    public void close() {
+        display.setDisplay(previous, "Main Menu");
+    }
+
+    @Override
+    public void cardSwiped(int memberID) {
+        if (state != (EBorrowState.INITIALIZED)) {
+            throw new RuntimeException(
+                    String.format("You cannot sqipe card in state" + new Object[]{state}));
+        }
+        borrower = memberDAO.getMemberByID(memberID);
+        if (borrower == null) {
+            ui.displayErrorMessage(String.format("Member does not exist", new Object[]{Integer.valueOf(memberID)}));
+            return;
+        }
+        boolean overdue = this.borrower.hasOverDueLoans();
+        boolean atLoanLimit = this.borrower.hasReachedLoanLimit();
+        boolean hasFines = this.borrower.hasFinesPayable();
+        boolean overFineLimit = this.borrower.hasReachedFineLimit();
+        boolean borrowing_restricted = (overdue) || (atLoanLimit) || (overFineLimit);
+        if (borrowing_restricted) {
+            setState(EBorrowState.BORROWING_RESTRICTED);
+        } else {
+            setState(EBorrowState.SCANNING_BOOKS);
+        }
+        int mID = this.borrower.getID();
+        String mName = this.borrower.getFirstName() + " " + this.borrower.getLastName();
+        String mContact = this.borrower.getContactPhone();
+        this.ui.displayMemberDetails(mID, mName, mContact);
+        if (hasFines) {
+            float amountOwing = this.borrower.getFineAmount();
+            this.ui.displayOutstandingFineMessage(amountOwing);
+        }
+        if (overdue) {
+            this.ui.displayOverDueMessage();
+        }
+        if (atLoanLimit) {
+            this.ui.displayAtLoanLimitMessage();
+        }
+        if (overFineLimit) {
+            System.out.println("State: " + this.state);
+            float amountOwing = this.borrower.getFineAmount();
+            this.ui.displayOverFineLimitMessage(amountOwing);
+        }
+        String loanString = buildLoanListDisplay(this.borrower.getLoans());
+        this.ui.displayExistingLoan(loanString);
+    }
+
+    @Override
+    public void bookScanned(int barcode) {
+        if (this.state != EBorrowState.SCANNING_BOOKS) {
+            throw new RuntimeException(
+                    String.format("BorrowUC_CTL : bookScanned : illegal operation in state: %s", new Object[]{this.state}));
+        }
+        this.ui.displayErrorMessage("");
+
+        IBook book = this.bookDAO.getBookByID(barcode);
+        if (book == null) {
+            this.ui.displayErrorMessage(String.format("Book %d not found", new Object[]{Integer.valueOf(barcode)}));
+            return;
+        }
+        if (book.getState() != EBookState.AVAILABLE) {
+            this.ui.displayErrorMessage(String.format("Book %d is not available: %s", new Object[]{Integer.valueOf(book.getID()), book.getState()}));
+            return;
+        }
+        if (this.bookList.contains(book)) {
+            this.ui.displayErrorMessage(String.format("Book %d already scanned: ", new Object[]{Integer.valueOf(book.getID())}));
+            return;
+        }
+        this.scanCount += 1;
+        this.bookList.add(book);
+        ILoan loan = this.loanDAO.createLoan(this.borrower, book);
+        this.loanList.add(loan);
+
+        this.ui.displayScannedBookDetails(book.toString());
+
+        this.ui.displayPendingLoan(buildLoanListDisplay(this.loanList));
+        if (this.scanCount >= 5) {
+            setState(EBorrowState.CONFIRMING_LOANS);
+        }
+
+    }
 
 	
 	private void setState(EBorrowState state) {
-		throw new RuntimeException("Not implemented yet");
+		
+    System.out.println("Setting state: " + state);
+    
+    this.state = state;
+    this.ui.setState(state);
+    switch (state)
+    {
+    case CANCELLED: 
+      this.reader.setEnabled(true);
+      this.scanner.setEnabled(false);
+      break;
+    case COMPLETED: 
+      this.reader.setEnabled(false);
+      this.scanner.setEnabled(true);
+      this.bookList = new ArrayList();
+      this.loanList = new ArrayList();
+      this.scanCount = this.borrower.getLoans().size();
+      
+      this.ui.displayScannedBookDetails("");
+      
+      this.ui.displayPendingLoan("");
+      break;
+    case CONFIRMING_LOANS: 
+      this.reader.setEnabled(false);
+      this.scanner.setEnabled(false);
+      
+      this.ui.displayConfirmingLoan(buildLoanListDisplay(this.loanList));
+      break;
+    case CREATED: 
+      this.reader.setEnabled(false);
+      this.scanner.setEnabled(false);
+      for (ILoan loan : this.loanList) {
+        this.loanDAO.commitLoan(loan);
+      }
+      this.printer.print(buildLoanListDisplay(this.loanList));
+      close();
+      break;
+    case SCANNING_BOOKS: 
+      this.reader.setEnabled(false);
+      this.scanner.setEnabled(false);
+      close();
+      break;
+    case INITIALIZED: 
+      this.reader.setEnabled(true);
+      this.scanner.setEnabled(false);
+
+      break;
+    default: 
+      throw new RuntimeException("Unknown state");
+    }
 	}
 
 	@Override
 	public void cancelled() {
-		close();
+		setState(EBorrowState.CANCELLED);
 	}
 	
 	@Override
 	public void scansCompleted() {
-		throw new RuntimeException("Not implemented yet");
+		setState(EBorrowState.CONFIRMING_LOANS);
 	}
 
 	@Override
 	public void loansConfirmed() {
-		throw new RuntimeException("Not implemented yet");
+		setState(EBorrowState.COMPLETED);
 	}
 
 	@Override
 	public void loansRejected() {
-		throw new RuntimeException("Not implemented yet");
+		 System.out.println("Loans Rejected");
+    setState(EBorrowState.SCANNING_BOOKS);
 	}
 
 	private String buildLoanListDisplay(List<ILoan> loans) {

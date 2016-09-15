@@ -45,7 +45,8 @@ public class BookMapDAOTest {
     public void tearDown() {
 
     }
-     @Test
+
+    @Test
     public void testConstructor() {
         //arrange
         //execute
@@ -54,6 +55,7 @@ public class BookMapDAOTest {
         assertNotNull(test.getBookMap());
         assertEquals(helper, test.getBookHelper());
     }
+
     @Test(expected = IllegalArgumentException.class)
     public void testConstructor_When_Helper_Null() {
         //arrange
@@ -63,7 +65,8 @@ public class BookMapDAOTest {
         //assert
         fail("worked with null helper");
     }
-     @Test
+
+    @Test
     public void testConstructor_With_HashMap() {
         //arrange
         IBook book = mock(IBook.class);
@@ -74,8 +77,7 @@ public class BookMapDAOTest {
         //assert
         Map actual = test.getBookMap();
         assertEquals(actual, expected);
-        
-        
+
     }
 
     @Test
@@ -121,7 +123,7 @@ public class BookMapDAOTest {
         BookMapDAO instance = bookDAO;
         List list;
         //execute
-       IBook expected = book;
+        IBook expected = book;
         bookDAO.setBookMap(1, expected);
         list = instance.findBooksByAuthor(author);
         //assert

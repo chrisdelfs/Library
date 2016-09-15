@@ -33,6 +33,7 @@ public class BookTest {
     @After
     public void tearDown() {
     }
+
     @Test
     public void testConstuctor() {
         //arrange
@@ -46,6 +47,7 @@ public class BookTest {
         assertEquals(null, test.getLoan());
         assertEquals(EBookState.AVAILABLE, test.getState());
     }
+
     @Test(expected = IllegalArgumentException.class)
     public void testContructor_Bad_Parameters() {
         //arrange
@@ -53,6 +55,7 @@ public class BookTest {
         Book test = new Book("", "heh", "ee", -1);
         fail("should not have created book");
     }
+
     @Test
     public void testBorrow() {
         //arrange
